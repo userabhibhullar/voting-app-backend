@@ -105,7 +105,7 @@ router.patch("/:id", async (req, res) => {
     const { uid, selection } = req.body;
 
     const existingSelection = poll.usersSelection.find(
-      (sel) => sel.uid === uid
+      (selectionData) => selectionData.uid === uid
     );
     if (existingSelection) {
       // Update existing selection
