@@ -1,9 +1,10 @@
 const Joi = require("joi");
 const router = require("express").Router();
 const { Poll } = require("../models/poll");
+const auth = require("../middleware/auth");
 
 // Fetching polls for view
-router.get("/", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
     const todos = await Poll.find();
     res.send(todos);
@@ -14,12 +15,14 @@ router.get("/", async (req, res) => {
 });
 
 // Creating new polls
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
+  if (!req.auth) return res.status(401).send("Not Authorized");
+
   const schema = Joi.object({
     date: Joi.date(),
     uid: Joi.string(),
     title: Joi.string().min(3).max(64).required(),
-    body: Joi.string().max(1024),
+    body: Joi.string().max(1024).allow(null),
     options: Joi.array().min(2).max(5).required(),
     usersSelection: Joi.array().items(
       Joi.object({
