@@ -6,7 +6,7 @@ const auth = require("../middleware/auth");
 // Fetching polls for view
 router.get("/", auth, async (req, res) => {
   try {
-    const todos = await Poll.find();
+    const todos = await Poll.find().sort({ date: -1 });
     res.send(todos);
   } catch (error) {
     console.log(error.message);
@@ -59,10 +59,11 @@ router.post("/", auth, async (req, res) => {
 });
 
 // Updating polls metadata
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
+  if (!req.auth) return res.status(400).send("Not Authenticated");
   const schema = Joi.object({
     title: Joi.string().min(3).max(64).required(),
-    body: Joi.string().max(1024),
+    body: Joi.string().max(1024).allow(null),
     options: Joi.array().min(2).max(5).required(),
   });
 
@@ -73,6 +74,9 @@ router.put("/:id", async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id);
     if (!poll) return res.status(404).send("Todo not found...");
+
+    if (poll.uid !== req.user._id)
+      return res.status(400).send("Not Authorized for this action");
 
     const { title, body, options } = req.body;
 
