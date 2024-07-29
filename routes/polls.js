@@ -116,14 +116,18 @@ router.patch("/:id", async (req, res) => {
     );
     if (existingSelection) {
       // Update existing selection
-      existingSelection.selection = selection;
+      if (existingSelection.selection === selection) {
+        poll.usersSelection.pull({ uid, selection });
+      } else {
+        existingSelection.selection = selection;
+      }
     } else {
       // Add new selection
       poll.usersSelection.push({ uid, selection });
     }
 
-    await poll.save();
-    res.send(poll);
+    const updatedPoll = await poll.save();
+    res.send(updatedPoll);
   } catch (error) {
     console.log(error.message);
     res.status(500).send(error.message);
